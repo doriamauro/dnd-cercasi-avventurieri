@@ -1,12 +1,19 @@
 <!doctype html>
 <html lang="it">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>D&D - Cercasi Avventurieri</title><link rel="stylesheet" href="css/style.css?v=20260926-2"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>D&D - Cercasi Avventurieri</title><link rel="stylesheet" href="css/style.css?v=20260926-3"></head>
 <body>
 <main class="page-shell">
 <header class="hero"><p class="eyebrow">Dungeons & Dragons • Prima esperienza</p><h1>Cercasi avventurieri</h1><p class="intro">Scegli il personaggio che vuoi interpretare. Quando un ruolo viene prenotato, non sarà più disponibile agli altri giocatori.</p></header>
 <section id="availabilityBoard" class="availability-board" aria-live="polite"></section>
 <section id="characters" class="characters-grid" aria-label="Personaggi disponibili"></section>
+<section class="comparison-section" aria-label="I personaggi a confronto">
+  <img class="comparison-image" src="locandina%20personaggi.png" alt="I personaggi a confronto">
+</section>
 </main>
+<dialog id="imageLightbox" class="image-lightbox">
+  <button type="button" id="closeLightbox" class="lightbox-close" aria-label="Chiudi immagine">×</button>
+  <img id="lightboxImage" src="" alt="">
+</dialog>
 <dialog id="reservationDialog"><form id="reservationForm" method="dialog">
 <button class="dialog-close" type="button" id="closeDialog" aria-label="Chiudi">×</button><p class="eyebrow">Prenota il personaggio</p><h2 id="dialogCharacterName"></h2>
 <label for="playerName">Il tuo nome</label><input id="playerName" name="playerName" type="text" maxlength="40" autocomplete="name" required>
@@ -16,4 +23,4 @@
 <div id="availabilityRows"></div><button type="button" class="add-date-button" id="addAvailability">+ Aggiungi un'altra data</button></section>
 <p id="dialogError" class="dialog-error" role="alert"></p>
 <div class="dialog-actions"><button type="button" class="secondary-button" id="cancelReservation">Annulla</button><button type="submit" class="primary-button">Conferma prenotazione</button></div>
-</form></dialog><script src="js/app.js?v=20260926-2"></script></body></html>
+</form></dialog><script src="js/app.js?v=20260926-3"></script></body></html>
