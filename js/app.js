@@ -1,156 +1,25 @@
-const CONFIG = {
-  apiUrl: "https://script.google.com/macros/s/AKfycbw6vROf0b18UcvyWxp1ENtlpYMuq5hJaBb_s-C1vqRafTaNWt9y_owYJQ9Je2UyFo8oUA/exec",
-  refreshIntervalMs: 30000
-};
+const CONFIG={apiUrl:"https://script.google.com/macros/s/AKfycbw6vROf0b18UcvyWxp1ENtlpYMuq5hJaBb_s-C1vqRafTaNWt9y_owYJQ9Je2UyFo8oUA/exec",refreshIntervalMs:30000};
+const CHARACTERS=[{id:"guerriero",name:"Guerriero",image:"guerriero.png"},{id:"paladino",name:"Paladino",image:"paladino.png"},{id:"ladro",name:"Ladro",image:"ladro.png"},{id:"mago",name:"Mago",image:"mago.png"},{id:"chierico",name:"Chierico",image:"chierico.png"}];
+const characterContainer=document.querySelector("#characters"),availabilityBoard=document.querySelector("#availabilityBoard"),dialog=document.querySelector("#reservationDialog"),form=document.querySelector("#reservationForm"),playerNameInput=document.querySelector("#playerName"),dialogCharacterName=document.querySelector("#dialogCharacterName"),dialogError=document.querySelector("#dialogError"),availabilityRows=document.querySelector("#availabilityRows"),existingAvailability=document.querySelector("#existingAvailability");
+let state=[],selectedCharacter=null;
 
-const CHARACTERS = [
-  { id: "guerriero", name: "Guerriero", image: "guerriero.png" },
-  { id: "paladino", name: "Paladino", image: "paladino.png" },
-  { id: "ladro", name: "Ladro", image: "ladro.png" },
-  { id: "mago", name: "Mago", image: "mago.png" },
-  { id: "chierico", name: "Chierico", image: "chierico.png" }
-];
+function escapeHtml(v){return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");}
+function parseAvailability(text,player=""){const out=[];String(text||"").split(";").map(x=>x.trim()).filter(Boolean).forEach(entry=>{const [datePart,slotsPart=""]=entry.split(":").map(x=>x.trim());slotsPart.split(",").map(x=>x.trim()).filter(Boolean).forEach(slot=>out.push({date:datePart,slot,player}));});return out;}
+function allSlots(){return state.flatMap(c=>parseAvailability(c.availability,c.player));}
+function slotKey(s){return s.date+"|"+s.slot;}
+function groupedSlots(){const map=new Map();allSlots().forEach(s=>{const k=slotKey(s);if(!map.has(k))map.set(k,{date:s.date,slot:s.slot,players:[]});if(s.player&&!map.get(k).players.includes(s.player))map.get(k).players.push(s.player);});return [...map.values()].sort((a,b)=>{const p=x=>{const [d,m,y]=x.split("/");return y+m+d};return p(a.date).localeCompare(p(b.date))||a.slot.localeCompare(b.slot)});}
+function normalizeState(data){const map=new Map((Array.isArray(data)?data:[]).map(x=>[String(x.personaggio||"").toLowerCase(),x]));return CHARACTERS.map(c=>{const x=map.get(c.name.toLowerCase())||{};return {...c,player:x.giocatore||"",availability:x.disponibilita||""};});}
 
-const characterContainer = document.querySelector("#characters");
-const statusMessage = document.querySelector("#statusMessage");
-const dialog = document.querySelector("#reservationDialog");
-const form = document.querySelector("#reservationForm");
-const playerNameInput = document.querySelector("#playerName");
-const dialogCharacterName = document.querySelector("#dialogCharacterName");
-const dialogError = document.querySelector("#dialogError");
-const availabilityRows = document.querySelector("#availabilityRows");
+function renderBoard(){const groups=groupedSlots();if(!groups.length){availabilityBoard.innerHTML='<strong>Disponibilità dei giocatori</strong><span class="board-empty">Nessuna disponibilità ancora inserita.</span>';return;}availabilityBoard.innerHTML='<strong>Disponibilità dei giocatori</strong><div class="board-slots">'+groups.map(g=>`<div class="board-slot ${g.players.length>=2?"match":""}"><span>${escapeHtml(g.date)} · ${escapeHtml(g.slot)}</span><small>${g.players.length} ${g.players.length===1?"giocatore":"giocatori"}${g.players.length>=2?" ✓ coincidenza":""}</small></div>`).join("")+'</div>';}
+function render(){characterContainer.innerHTML="";state.forEach(c=>{const reserved=Boolean(c.player),card=document.createElement("article");card.className="character-card";card.innerHTML=`<div class="character-image-wrap"><img class="character-image" src="${c.image}" alt="Locandina del ${c.name}"></div><div class="character-body"><h2 class="character-name">${c.name}</h2><span class="character-status ${reserved?"reserved":"available"}">${reserved?"Prenotato":"Disponibile"}</span><p class="character-player">${reserved?`Prenotato da <strong>${escapeHtml(c.player)}</strong>`:"Questo personaggio è ancora libero."}</p></div>`;const b=document.createElement("button");b.className="reserve-button";b.type="button";b.textContent=reserved?"Non disponibile":"Scegli questo personaggio";b.disabled=reserved;b.onclick=()=>openReservation(c);card.querySelector(".character-body").appendChild(b);characterContainer.appendChild(card);});renderBoard();}
 
-let state = [];
-let selectedCharacter = null;
+function addAvailabilityRow(){const row=document.createElement("div");row.className="availability-row";row.innerHTML='<input class="availability-date" type="date" aria-label="Data disponibilità"><label><input class="morning" type="checkbox"> Mattino</label><label><input class="afternoon" type="checkbox"> Pomeriggio</label><button type="button" class="remove-date" aria-label="Rimuovi data">×</button>';row.querySelector(".remove-date").onclick=()=>{if(availabilityRows.children.length>1)row.remove()};availabilityRows.appendChild(row);}
+function renderExistingChoices(){const groups=groupedSlots();if(!groups.length){existingAvailability.innerHTML='<p class="no-existing">Non ci sono ancora disponibilità proposte dagli altri giocatori.</p>';return;}existingAvailability.innerHTML='<p class="existing-title">Disponibilità già proposte</p><div class="existing-choices">'+groups.map((g,i)=>`<label class="existing-choice ${g.players.length>=2?"match":""}"><input type="checkbox" class="existing-slot" value="${escapeHtml(g.date+"|"+g.slot)}"><span>${escapeHtml(g.date)} · ${escapeHtml(g.slot)} <small>(${g.players.length})</small></span></label>`).join("")+'</div>';}
+function openReservation(c){selectedCharacter=c;dialogCharacterName.textContent=c.name;playerNameInput.value="";dialogError.textContent="";availabilityRows.innerHTML="";renderExistingChoices();addAvailabilityRow();dialog.showModal();playerNameInput.focus();}
+function closeReservation(){selectedCharacter=null;dialog.close();}
+function collectAvailability(){const slots=new Map();existingAvailability.querySelectorAll(".existing-slot:checked").forEach(x=>{const [date,slot]=x.value.split("|");slots.set(date+"|"+slot,{date,slot});});availabilityRows.querySelectorAll(".availability-row").forEach(row=>{const iso=row.querySelector(".availability-date").value;if(!iso)return;const [y,m,d]=iso.split("-"),date=`${d}/${m}/${y}`;if(row.querySelector(".morning").checked)slots.set(date+"|Mattino",{date,slot:"Mattino"});if(row.querySelector(".afternoon").checked)slots.set(date+"|Pomeriggio",{date,slot:"Pomeriggio"});});const byDate=new Map();[...slots.values()].forEach(s=>{if(!byDate.has(s.date))byDate.set(s.date,[]);byDate.get(s.date).push(s.slot)});return [...byDate].map(([date,ss])=>`${date}: ${["Mattino","Pomeriggio"].filter(x=>ss.includes(x)).join(", ")}`).join("; ");}
 
-function setStatus(message) { statusMessage.textContent = message; }
-
-function normalizeState(apiData) {
-  const reservations = new Map(Array.isArray(apiData)
-    ? apiData.map(item => [String(item.personaggio || "").toLowerCase(), item.giocatore || ""])
-    : []);
-  return CHARACTERS.map(character => ({ ...character, player: reservations.get(character.name.toLowerCase()) || "" }));
-}
-
-function render() {
-  characterContainer.innerHTML = "";
-  state.forEach(character => {
-    const reserved = Boolean(character.player);
-    const card = document.createElement("article");
-    card.className = "character-card";
-    const imageWrap = document.createElement("div");
-    imageWrap.className = "character-image-wrap";
-    const img = document.createElement("img");
-    img.className = "character-image";
-    img.src = character.image;
-    img.alt = `Locandina del ${character.name}`;
-    imageWrap.appendChild(img);
-    const body = document.createElement("div");
-    body.className = "character-body";
-    body.innerHTML = `<h2 class="character-name">${character.name}</h2>
-      <span class="character-status ${reserved ? "reserved" : "available"}">${reserved ? "Prenotato" : "Disponibile"}</span>
-      <p class="character-player">${reserved ? `Prenotato da <strong>${escapeHtml(character.player)}</strong>` : "Questo personaggio è ancora libero."}</p>`;
-    const button = document.createElement("button");
-    button.className = "reserve-button";
-    button.type = "button";
-    button.textContent = reserved ? "Non disponibile" : "Scegli questo personaggio";
-    button.disabled = reserved;
-    button.addEventListener("click", () => openReservation(character));
-    body.appendChild(button);
-    card.append(imageWrap, body);
-    characterContainer.appendChild(card);
-  });
-}
-
-function escapeHtml(value) {
-  return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-
-function addAvailabilityRow() {
-  const row = document.createElement("div");
-  row.className = "availability-row";
-  row.innerHTML = `
-    <input class="availability-date" type="date" aria-label="Data disponibilità">
-    <label><input class="morning" type="checkbox"> Mattino</label>
-    <label><input class="afternoon" type="checkbox"> Pomeriggio</label>
-    <button type="button" class="remove-date" aria-label="Rimuovi data">×</button>`;
-  row.querySelector(".remove-date").addEventListener("click", () => {
-    if (availabilityRows.children.length > 1) row.remove();
-  });
-  availabilityRows.appendChild(row);
-}
-
-function openReservation(character) {
-  selectedCharacter = character;
-  dialogCharacterName.textContent = character.name;
-  playerNameInput.value = "";
-  dialogError.textContent = "";
-  availabilityRows.innerHTML = "";
-  addAvailabilityRow();
-  dialog.showModal();
-  playerNameInput.focus();
-}
-
-function closeReservation() { selectedCharacter = null; dialog.close(); }
-
-function collectAvailability() {
-  const values = [];
-  availabilityRows.querySelectorAll(".availability-row").forEach(row => {
-    const date = row.querySelector(".availability-date").value;
-    const slots = [];
-    if (row.querySelector(".morning").checked) slots.push("Mattino");
-    if (row.querySelector(".afternoon").checked) slots.push("Pomeriggio");
-    if (date && slots.length) {
-      const [y,m,d] = date.split("-");
-      values.push(`${d}/${m}/${y}: ${slots.join(", ")}`);
-    }
-  });
-  return values.join("; ");
-}
-
-async function loadState({ quiet = false } = {}) {
-  if (!quiet) setStatus("Aggiornamento disponibilità…");
-  try {
-    const response = await fetch(CONFIG.apiUrl, { cache: "no-store" });
-    if (!response.ok) throw new Error();
-    state = normalizeState(await response.json());
-    render();
-    if (!quiet) setStatus("Disponibilità aggiornata.");
-  } catch (error) {
-    setStatus("Non riesco a leggere le prenotazioni. Riprova tra poco.");
-  }
-}
-
-async function reserveCharacter(character, playerName, availability) {
-  const body = new URLSearchParams({ personaggio: character.name, giocatore: playerName, disponibilita: availability });
-  const response = await fetch(CONFIG.apiUrl, { method: "POST", body });
-  if (!response.ok) throw new Error();
-  return response.json();
-}
-
-form.addEventListener("submit", async event => {
-  event.preventDefault();
-  const playerName = playerNameInput.value.trim();
-  const availability = collectAvailability();
-  if (!playerName) { dialogError.textContent = "Inserisci il tuo nome."; return; }
-  if (!availability) { dialogError.textContent = "Inserisci almeno una data e seleziona Mattino e/o Pomeriggio."; return; }
-  const submitButton = form.querySelector('[type="submit"]');
-  submitButton.disabled = true;
-  dialogError.textContent = "";
-  const characterName = selectedCharacter.name;
-  try {
-    const result = await reserveCharacter(selectedCharacter, playerName, availability);
-    if (!result.success) { dialogError.textContent = result.message || "Il personaggio non è più disponibile."; await loadState({quiet:true}); return; }
-    closeReservation();
-    await loadState();
-    setStatus(`${characterName} prenotato con successo.`);
-  } catch (error) {
-    dialogError.textContent = "Prenotazione non riuscita. Riprova.";
-  } finally { submitButton.disabled = false; }
-});
-
-document.querySelector("#addAvailability").addEventListener("click", addAvailabilityRow);
-document.querySelector("#closeDialog").addEventListener("click", closeReservation);
-document.querySelector("#cancelReservation").addEventListener("click", closeReservation);
-loadState();
-setInterval(() => loadState({quiet:true}), CONFIG.refreshIntervalMs);
+async function loadState(){try{const r=await fetch(CONFIG.apiUrl,{cache:"no-store"});if(!r.ok)throw new Error();state=normalizeState(await r.json());render();}catch(e){availabilityBoard.innerHTML='<span class="board-error">Non riesco a leggere le disponibilità. Riprova tra poco.</span>';}}
+async function reserveCharacter(c,name,availability){const r=await fetch(CONFIG.apiUrl,{method:"POST",body:new URLSearchParams({personaggio:c.name,giocatore:name,disponibilita:availability})});if(!r.ok)throw new Error();return r.json();}
+form.addEventListener("submit",async e=>{e.preventDefault();const name=playerNameInput.value.trim(),availability=collectAvailability();if(!name){dialogError.textContent="Inserisci il tuo nome.";return}if(!availability){dialogError.textContent="Seleziona o inserisci almeno una disponibilità.";return}const btn=form.querySelector('[type="submit"]'),characterName=selectedCharacter.name;btn.disabled=true;dialogError.textContent="";try{const result=await reserveCharacter(selectedCharacter,name,availability);if(!result.success){dialogError.textContent=result.message||"Il personaggio non è più disponibile.";await loadState();return}closeReservation();await loadState();}catch(err){dialogError.textContent="Prenotazione non riuscita. Riprova."}finally{btn.disabled=false}});
+document.querySelector("#addAvailability").onclick=addAvailabilityRow;document.querySelector("#closeDialog").onclick=closeReservation;document.querySelector("#cancelReservation").onclick=closeReservation;loadState();setInterval(loadState,CONFIG.refreshIntervalMs);
