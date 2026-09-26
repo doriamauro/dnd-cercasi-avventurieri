@@ -4,11 +4,11 @@ const CONFIG = {
 };
 
 const CHARACTERS = [
-  { id: "guerriero", name: "Guerriero", image: "images/guerriero.png" },
-  { id: "paladino", name: "Paladino", image: "images/paladino.png" },
-  { id: "ladro", name: "Ladro", image: "images/ladro.png" },
-  { id: "mago", name: "Mago", image: "images/mago.png" },
-  { id: "chierico", name: "Chierico", image: "images/chierico.png" }
+  { id: "guerriero", name: "Guerriero", image: "guerriero.png" },
+  { id: "paladino", name: "Paladino", image: "paladino.png" },
+  { id: "ladro", name: "Ladro", image: "ladro.png" },
+  { id: "mago", name: "Mago", image: "mago.png" },
+  { id: "chierico", name: "Chierico", image: "chierico.png" }
 ];
 
 const characterContainer = document.querySelector("#characters");
