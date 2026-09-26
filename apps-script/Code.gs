@@ -2,11 +2,12 @@ const SHEET_NAME = 'Prenotazioni';
 
 function doGet() {
   const sheet = getSheet_();
-  const values = sheet.getRange(2, 1, 5, 2).getValues();
+  const values = sheet.getRange(2, 1, 5, 3).getValues();
 
-  const result = values.map(([personaggio, giocatore]) => ({
+  const result = values.map(([personaggio, giocatore, disponibilita]) => ({
     personaggio,
-    giocatore
+    giocatore,
+    disponibilita
   }));
 
   return json_(result);
@@ -15,9 +16,10 @@ function doGet() {
 function doPost(e) {
   const personaggio = String(e.parameter.personaggio || '').trim();
   const giocatore = String(e.parameter.giocatore || '').trim();
+  const disponibilita = String(e.parameter.disponibilita || '').trim();
 
-  if (!personaggio || !giocatore) {
-    return json_({ success: false, message: 'Dati mancanti.' });
+  if (!personaggio || !giocatore || !disponibilita) {
+    return json_({ success: false, message: 'Inserisci nome e almeno una disponibilità.' });
   }
 
   const lock = LockService.getScriptLock();
@@ -26,7 +28,7 @@ function doPost(e) {
     lock.waitLock(5000);
 
     const sheet = getSheet_();
-    const values = sheet.getRange(2, 1, 5, 2).getValues();
+    const values = sheet.getRange(2, 1, 5, 3).getValues();
     const rowIndex = values.findIndex(([name]) =>
       String(name).toLowerCase() === personaggio.toLowerCase()
     );
@@ -43,12 +45,13 @@ function doPost(e) {
       });
     }
 
-    sheet.getRange(rowIndex + 2, 2).setValue(giocatore);
+    sheet.getRange(rowIndex + 2, 2, 1, 2).setValues([[giocatore, disponibilita]]);
 
     return json_({
       success: true,
       personaggio,
-      giocatore
+      giocatore,
+      disponibilita
     });
   } catch (error) {
     return json_({ success: false, message: 'Errore temporaneo. Riprova.' });
