@@ -1,5 +1,5 @@
 const CONFIG = {
-  apiUrl: "", // Inserire qui l'URL della Web App di Google Apps Script
+  apiUrl: "https://script.google.com/macros/s/AKfycbw6vROf0b18UcvyWxp1ENtlpYMuq5hJaBb_s-C1vqRafTaNWt9y_owYJQ9Je2UyFo8oUA/exec",
   refreshIntervalMs: 30000
 };
 
