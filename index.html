@@ -13,14 +13,9 @@
       <h1>Cercasi avventurieri</h1>
       <p class="intro">Scegli il personaggio che vuoi interpretare. Quando un ruolo viene prenotato, non sarà più disponibile agli altri giocatori.</p>
     </header>
-
-    <section class="status-bar" aria-live="polite">
-      <span id="statusMessage">Caricamento disponibilità…</span>
-    </section>
-
+    <section class="status-bar" aria-live="polite"><span id="statusMessage">Caricamento disponibilità…</span></section>
     <section id="characters" class="characters-grid" aria-label="Personaggi disponibili"></section>
   </main>
-
   <dialog id="reservationDialog">
     <form id="reservationForm" method="dialog">
       <button class="dialog-close" type="button" id="closeDialog" aria-label="Chiudi">×</button>
@@ -28,6 +23,12 @@
       <h2 id="dialogCharacterName"></h2>
       <label for="playerName">Il tuo nome</label>
       <input id="playerName" name="playerName" type="text" maxlength="40" autocomplete="name" required>
+      <section class="availability-section">
+        <h3>Quando sei disponibile?</h3>
+        <p class="availability-help">Indica una o più date e, per ciascuna, se sei disponibile al mattino, al pomeriggio o in entrambe le fasce.</p>
+        <div id="availabilityRows"></div>
+        <button type="button" class="add-date-button" id="addAvailability">+ Aggiungi un'altra data</button>
+      </section>
       <p id="dialogError" class="dialog-error" role="alert"></p>
       <div class="dialog-actions">
         <button type="button" class="secondary-button" id="cancelReservation">Annulla</button>
@@ -35,7 +36,6 @@
       </div>
     </form>
   </dialog>
-
   <script src="js/app.js"></script>
 </body>
 </html>
