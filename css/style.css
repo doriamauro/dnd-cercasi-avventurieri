@@ -16,3 +16,5 @@ dialog{width:min(650px,calc(100% - 28px));border:1px solid #9d8257;background:va
 .zoom-hint{position:absolute;z-index:2;left:50%;bottom:10px;transform:translateX(-50%);width:max-content;max-width:90%;padding:6px 10px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff;font-family:Arial,sans-serif;font-size:.72rem;letter-spacing:.02em;pointer-events:none}
 .comparison-section{margin-top:70px}
 .comparison-heading{margin:0 0 14px;text-align:center;font-size:clamp(1.5rem,2.6vw,2.25rem);font-weight:700;color:var(--ink)}
+
+.zoom-hint{top:10px;bottom:auto;background:rgba(0,0,0,.68);padding:7px 12px;font-size:.76rem;box-shadow:0 1px 4px rgba(0,0,0,.3)}
