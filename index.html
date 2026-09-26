@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D&D - Cercasi Avventurieri</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">Dungeons & Dragons • Prima esperienza</p>
+      <h1>Cercasi avventurieri</h1>
+      <p class="intro">Scegli il personaggio che vuoi interpretare. Quando un ruolo viene prenotato, non sarà più disponibile agli altri giocatori.</p>
+    </header>
+
+    <section class="status-bar" aria-live="polite">
+      <span id="statusMessage">Caricamento disponibilità…</span>
+    </section>
+
+    <section id="characters" class="characters-grid" aria-label="Personaggi disponibili"></section>
+  </main>
+
+  <dialog id="reservationDialog">
+    <form id="reservationForm" method="dialog">
+      <button class="dialog-close" type="button" id="closeDialog" aria-label="Chiudi">×</button>
+      <p class="eyebrow">Prenota il personaggio</p>
+      <h2 id="dialogCharacterName"></h2>
+      <label for="playerName">Il tuo nome</label>
+      <input id="playerName" name="playerName" type="text" maxlength="40" autocomplete="name" required>
+      <p id="dialogError" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelReservation">Annulla</button>
+        <button type="submit" class="primary-button">Conferma prenotazione</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
